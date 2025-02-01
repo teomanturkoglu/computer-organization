@@ -1,0 +1,452 @@
+`timescale 1ns / 1ps
+
+//Part-2b
+module multiplexer_gate(
+    input wire [2:0] S,
+    input wire [7:0] I0,
+    input wire [7:0] I1,
+    input wire [7:0] I2,
+    input wire [7:0] I3,
+    input wire [7:0] I4,
+    input wire [7:0] I5,
+    input wire [7:0] I6,
+    input wire [7:0] I7,
+    output wire [7:0] O
+    );
+    
+    assign O = (S == 3'b000) ? I0 :
+               (S == 3'b001) ? I1 :
+               (S == 3'b010) ? I2 :
+               (S == 3'b011) ? I3 :
+               (S == 3'b100) ? I4 :
+               (S == 3'b101) ? I5 :
+               (S == 3'b110) ? I6 :
+                               I7 ;
+endmodule
+
+module ALU(
+    input [7:0] A,
+    input [7:0] B,
+    input [3:0] FunSel,
+    input Cin,
+    output reg[7:0] outALU,
+    output reg[3:0] flagOUT //flag register Z, C, N, O
+    );
+    
+    // Carry -> Unsigned,   Overflow -> Signed
+    
+    
+    // FunSel selection
+    always @(*)
+    case(FunSel)
+        4'b0000: 
+            begin 
+                outALU <= A; 
+                // C, O unaffected
+                flagOUT[3] <= (outALU == 8'b0) ? 1:0; // Z 
+                flagOUT[1] <= (outALU[7] == 1'b1); // N
+           
+            end 
+        4'b0001:
+            begin 
+                outALU <= B; 
+                // C, O unaffected
+                flagOUT[3] <= (outALU == 8'b0) ? 1:0; // Z 
+                flagOUT[1] <= (outALU[7] == 1'b1); // N
+            end 
+        4'b0010:
+            begin 
+                outALU <= ~A; 
+                // C, O unaffected
+                flagOUT[3] <= (outALU == 8'b0) ? 1:0; // Z 
+                flagOUT[1] <= (outALU[7] == 1'b1); // N
+            end 
+        4'b0011:
+            begin 
+                outALU <= ~B; 
+                // C, O unaffected
+                flagOUT[3] <= (outALU == 8'b0) ? 1:0; // Z 
+                flagOUT[1] <= (outALU[7] == 1'b1); // N
+            end 
+        4'b0100:
+            begin 
+                outALU <= A+B+Cin;
+                flagOUT[3] <= (outALU == 8'b0) ? 1:0; // Z 
+                flagOUT[2] <= (A[7]&B[7] | ~outALU[7]&A[7] | ~outALU[7]&B[7]); // C
+                // if 1... + 1...= 10... | 1... + .... = (1)0... | .... + 1... = (1)0...
+                flagOUT[1] <= (outALU[7] == 1'b1); // N
+                flagOUT[0] <= (A[7] ~^ B[7]) & (A[7] ^ outALU[7]); // O
+                // if the signs of the numbers are same and sign of the result is different, overlow occurs 
+            end 
+        4'b0101:
+            begin 
+                outALU <=  A-B; // A+((~B)+1)
+                flagOUT[3] <= (outALU == 8'b0) ? 1:0; // Z 
+                {flagOUT[2],outALU} <= {1'b0,A} - {1'b0,B}; // C
+                // If B > A there is carry, else there is no carry
+                flagOUT[1] <= (outALU[7] == 1'b1); // N
+                flagOUT[0] <= (A[7] ^ B[7]) & (A[7] ^ outALU[7]); // O
+                // If the signs of the numbers are different and sign of the result is different from A, overflow occurs. 
+            end 
+        4'b0110: 
+            begin 
+                if(A > B) outALU = A;
+                else outALU = 8'b0;
+                
+                flagOUT[3] <= (outALU == 8'b0) ? 1:0; // Z 
+                flagOUT[1] <= (outALU[7] == 1'b1); // N
+                flagOUT[0] <= (outALU[6] != outALU[7]) ? 1:0;  // O
+                // If the signs of the numbers are different and sign of the result is different from A, overflow occurs. 
+                flagOUT[2] <= ((A-B)>0) ? 0:1 ;  // C
+                // If B > A there is carry, else there is no carry
+                
+            end  
+        4'b0111:
+            begin 
+                outALU <= A&B; 
+                // C, O unaffected
+                flagOUT[3] <= (outALU == 8'b0) ? 1:0; // Z 
+                flagOUT[1] <= (outALU[7] == 1'b1); // N
+            end 
+        4'b1000:
+            begin 
+                outALU <= A|B; 
+                // C, O unaffected
+                flagOUT[3] <= (outALU == 8'b0) ? 1:0; // Z 
+                flagOUT[1] <= (outALU[7] == 1'b1); // N
+            end 
+        4'b1001:
+            begin 
+                outALU <= ~(A&B); //NAND
+                // C, O unaffected
+                flagOUT[3] <= (outALU == 8'b0) ? 1:0; // Z 
+                flagOUT[1] <= (outALU[7] == 1'b1); // N
+            end 
+        4'b1010:
+            begin 
+                outALU <= A^B; //XOR
+                // C, O unaffected
+                flagOUT[3] <= (outALU == 8'b0) ? 1:0; // Z 
+                flagOUT[1] <= (outALU[7] == 1'b1); // N
+            end 
+        4'b1011: //logical shift left 
+            begin
+                flagOUT[2] <= A[7];  //C
+                outALU[7] <= A[6];
+                outALU[6] <= A[5];
+                outALU[5] <= A[4];
+                outALU[4] <= A[3];
+                outALU[3] <= A[2];
+                outALU[2] <= A[1];
+                outALU[1] <= A[0];
+                outALU[0] <= 1'b0;
+                flagOUT[3] <= (outALU == 8'b0) ? 1:0; // Z 
+                flagOUT[1] <= (outALU[7] == 1'b1); // N 
+            end
+        4'b1100: //logical shift right 
+             begin
+               flagOUT[2] <= A[0];  //C
+               outALU[0] <= A[1];
+               outALU[1] <= A[2];
+               outALU[2] <= A[3];
+               outALU[3] <= A[4];
+               outALU[4] <= A[5];
+               outALU[5] <= A[6];
+               outALU[6] <= A[7];
+               outALU[7] <= 0;
+               
+               flagOUT[3] <= (outALU == 8'b0) ? 1:0; // Z 
+               flagOUT[1] <= (outALU[7] == 1'b1); // N
+           end
+        4'b1101: //arithmetic shift left 
+             begin
+               flagOUT[0] <= (A[7] == 1'b1); // O
+               outALU[7] <= A[6];
+               outALU[6] <= A[5];
+               outALU[5] <= A[4];
+               outALU[4] <= A[3];
+               outALU[3] <= A[2];
+               outALU[2] <= A[1];
+               outALU[1] <= A[0];
+               outALU[0] <= 0;
+             
+               flagOUT[3] <= (outALU == 8'b0) ? 1:0; // Z 
+               flagOUT[1] <= (outALU[7] == 1'b1); // N
+               
+           end
+        4'b1110: //arithmetic shift right
+             begin
+               outALU[0] <= A[1];
+               outALU[1] <= A[2];
+               outALU[2] <= A[3];
+               outALU[3] <= A[4];
+               outALU[4] <= A[5];
+               outALU[5] <= A[6];
+               outALU[6] <= A[7];
+               outALU[7] <= 0;
+               
+               flagOUT[3] <= (outALU == 8'b0) ? 1:0; // Z 
+            end
+        4'b1111:
+            begin
+               flagOUT[2] <= A[0]; // C
+               outALU[0] <= A[1];
+               outALU[1] <= A[2];
+               outALU[2] <= A[3];
+               outALU[3] <= A[4];
+               outALU[4] <= A[5];
+               outALU[5] <= A[6];
+               outALU[6] <= A[7];
+               outALU[7] <= flagOUT[2];
+               
+               flagOUT[3] <= (outALU == 8'b0) ? 1:0; // Z
+               flagOUT[1] <= (outALU[7] == 1'b1); // N
+               
+            end
+    endcase   
+endmodule
+
+module muxA(
+    input [1:0] MUXSelA,
+    input [7:0] A,
+    input [7:0] B,
+    input [7:0] C,
+    input [7:0] D,
+    output [7:0] outMUXA
+    );
+    
+     assign outMUXA = (MUXSelA == 2'b00) ? A :
+                      (MUXSelA == 2'b01) ? B :
+                      (MUXSelA == 2'b10) ? C :
+                                           D ;
+    
+endmodule
+
+module muxC(
+    input MUXSelC,
+    input [7:0] A,
+    input [7:0] B,
+    output [7:0] outMUXC
+    );
+    
+     assign outMUXC = (MUXSelC == 2'b00) ? A :
+                                           B ;
+endmodule
+
+/*********REGISTER FILE*****/
+
+module regN #(parameter n = 8) (clk, FunSel, I, E, Q);
+    input clk;
+    input [1:0] FunSel;
+    input [n-1:0] I;
+    input E;
+    output reg[n-1:0] Q;
+
+    always @(posedge clk)
+
+        if(!E)   Q <= Q;
+        else 
+            begin
+                case(FunSel)
+                    2'b00: begin
+                        Q <= 0;
+                        end
+                    2'b01: Q <= I;
+                    2'b10: begin 
+                            Q <= Q - 1;
+                            end
+                    2'b11: Q <= Q + 1;
+                 endcase
+            end
+endmodule
+
+module RegisterFile(
+    input clk,
+    input [7:0]I,
+    input [2:0]O1Sel,
+    input [2:0]O2Sel,
+    input [1:0]FunSel,
+    input [3:0]RSel,
+    input [3:0]TSel,
+    output [7:0]O1,
+    output [7:0]O2
+    );
+    
+    wire [7:0]mux0;
+    wire [7:0]mux1;
+    wire [7:0]mux2;
+    wire [7:0]mux3;
+    
+    wire [7:0]mux4;
+    wire [7:0]mux5;
+    wire [7:0]mux6;
+    wire [7:0]mux7;
+    
+    regN R1(clk, FunSel, I, RSel[3], mux0); 
+    regN R2(clk, FunSel, I, RSel[2], mux1); 
+    regN R3(clk, FunSel, I, RSel[1], mux2); 
+    regN R4(clk, FunSel, I, RSel[0], mux3); 
+    
+    regN T1(clk, FunSel, I, TSel[3], mux4); 
+    regN T2(clk, FunSel, I, TSel[2], mux5); 
+    regN T3(clk, FunSel, I, TSel[1], mux6); 
+    regN T4(clk, FunSel, I, TSel[0], mux7); 
+    
+    multiplexer_gate mux_gateA(O1Sel,mux4,mux5,mux6,mux7,mux0,mux1,mux2,mux3,O1);
+    multiplexer_gate mux_gateB(O2Sel,mux4,mux5,mux6,mux7,mux0,mux1,mux2,mux3,O2);
+endmodule
+
+
+
+//Part-2a
+module IR16bit(
+    input clk,
+    input [7:0] I,
+    input LH,
+    input E,
+    input[1:0] FunSel,
+    output reg[15:0] IROut
+    );
+    
+    always @(posedge clk)
+        if(!E)   IROut <= IROut;
+        else if(E & FunSel == 2'b00)   IROut <= 0;
+        else if(E & FunSel == 2'b01 & !LH) IROut[7:0] <= I;
+        else if(E & FunSel == 2'b01 & LH) IROut[15:8] <= I;
+        else if(E & FunSel == 2'b10)   IROut <= IROut-1;
+        else if(E & FunSel == 2'b11)   IROut <= IROut+1;
+    
+endmodule
+
+module Memory(
+    input wire[7:0] address,
+    input wire[7:0] data,
+    input wire wr, //Read = 0, Write = 1
+    input wire cs, //Chip is enable when cs = 0
+    input wire clock,
+    output reg[7:0] o // Output
+);
+    //Declaration of the RAM Area
+    reg[7:0] RAM_DATA[0:255];
+    //Read Ram data from the file
+    initial $readmemh("RAM.mem", RAM_DATA);
+    //Read the selected data from RAM
+    always @(*) begin
+        o = ~wr && ~cs ? RAM_DATA[address] : 8'hZ;
+    end
+    
+    //Write the data to RAM
+    always @(posedge clock) begin
+        if (wr && ~cs) begin
+            RAM_DATA[address] <= data; 
+        end
+    end
+endmodule
+
+//Part-2c
+module multiplexer_gate2(
+    input wire [1:0] S,
+    input wire [7:0] I0,
+    input wire [7:0] I1,
+    input wire [7:0] I2,
+    input wire [7:0] I3,
+    output wire [7:0] O
+    );
+    
+    assign O = (S == 2'b00) ? I0 :
+               (S == 2'b01) ? I1 :
+               (S == 2'b10) ? I2 :
+                              I3 ;
+endmodule
+
+module addressRegisterFile(
+    input clk,
+    input [7:0]I,
+    input [1:0]OutASel,
+    input [1:0]OutBSel,
+    input [1:0]FunSel,
+    input [3:0]RSel,
+    output [7:0]OutA,
+    output [7:0]OutB
+    );
+    
+    wire [7:0]mux0;
+    wire [7:0]mux1;
+    wire [7:0]mux2;
+    wire [7:0]mux3;
+    
+    
+    regN AR(clk, FunSel, I, RSel[2], mux0);
+    regN SP(clk, FunSel, I, RSel[1], mux1);
+    regN PCPast(clk, FunSel, I, RSel[0], mux2);
+    regN PC(clk, FunSel, I, RSel[3], mux3);
+    
+    
+    multiplexer_gate2 mux_gateC(OutASel,mux0,mux1,mux2,mux3,OutA);
+    multiplexer_gate2 mux_gateD(OutBSel,mux0,mux1,mux2,mux3,OutB);
+endmodule
+ 
+module muxB(
+    input [1:0] MUXSelB,
+    input [7:0] A,
+    input [7:0] B,
+    input [7:0] C,
+    input [7:0] D,
+    output [7:0] outMUXB
+    );
+    
+     assign outMUXB = (MUXSelB == 2'b00) ? A :
+                      (MUXSelB == 2'b01) ? B :
+                      (MUXSelB == 2'b10) ? C :
+                                           D ;
+                      
+endmodule
+
+
+module ALUSystem(
+    input[2:0] RF_OutASel,
+    input[2:0] RF_OutBSel,
+    input[1:0] RF_FunSel,
+    input[3:0] RF_RSel,
+    input[3:0] RF_TSel,
+    input[3:0] ALU_FunSel,
+    input [1:0] ARF_OutASel,
+    input [1:0] ARF_OutBSel,
+    input[1:0] ARF_FunSel,
+    input[3:0] ARF_RSel,
+    input IR_LH,
+    input IR_Enable,
+    input[1:0] IR_Funsel,
+    input Mem_WR,
+    input Mem_CS,
+    input[1:0] MuxASel,
+    input[1:0] MuxBSel,
+    input MuxCSel,
+    input Clock
+);
+    wire[7:0] ARF_AOut;
+    wire[7:0] Address;
+    wire[15:0] IROut16bit;
+    wire[7:0] IROut;
+    wire[7:0] MuxAOut;
+    wire[7:0] MuxBOut; 
+    wire[7:0] AOut;
+    wire[7:0] BOut;
+    wire[7:0] MemoryOut;
+    wire[3:0] ALUOutFlag;
+    wire[7:0] MuxCOut;
+    wire[7:0] ALUOut; 
+    
+    RegisterFile registerfile(Clock, MuxAOut, RF_OutASel, RF_OutBSel, RF_FunSel, RF_RSel, RF_TSel, AOut, BOut);
+    muxC muxc(MuxCSel, AOut, ARF_AOut, MuxCOut);
+    ALU alu(MuxCOut, BOut, ALU_FunSel, ALUOutFlag[2], ALUOut, ALUOutFlag);
+    muxA muxa(MuxASel,ALUOut , ARF_AOut, MemoryOut, IROut[7:0], MuxAOut);
+    muxB muxb(MuxBSel, ALUOut, MemoryOut, IROut[7:0], ARF_AOut,MuxBOut);
+    addressRegisterFile ARF (Clock, MuxBOut, ARF_OutASel, ARF_OutBSel, ARF_FunSel, ARF_RSel, ARF_AOut,Address);
+    Memory mem(Address, ALUOut, Mem_WR, Mem_CS, Clock, MemoryOut);
+    IR16bit IR(Clock, MemoryOut, IR_LH, IR_Enable, IR_Funsel, IROut16bit);
+    assign IROut = IROut16bit[15:8];
+    
+    
+    
+endmodule
