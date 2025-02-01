@@ -1,0 +1,1971 @@
+`timescale 1ns / 1ps
+
+module AddressRegisterFile(
+    input Reset,
+    input Clock,
+    input [15:0]I,
+    input [1:0]OutCSel,
+    input [1:0]OutDSel,
+    input [2:0]FunSel,
+    input [2:0]RegSel,
+    output reg [15:0]OutC,
+    output reg [15:0]OutD
+    );
+    
+    wire [15:0]mux0;
+        wire [15:0]mux1;
+        wire [15:0]mux2;
+       
+        
+        
+            Register SP(.Reset(Reset), .Clock(Clock), .FunSel(FunSel), .I(I), .E(!RegSel[0]), .Q(mux0));
+            Register AR(.Reset(Reset), .Clock(Clock), .FunSel(FunSel), .I(I), .E(!RegSel[1]), .Q(mux1));
+            Register PC(.Reset(Reset), .Clock(Clock), .FunSel(FunSel), .I(I), .E(!RegSel[2]), .Q(mux2));
+            
+       always @(posedge Clock or negedge Reset) begin
+                if (~Reset) begin
+                    OutC <= 16'h0000;
+                    OutD <= 16'h0000;
+                end
+            end
+            
+       always @(*) begin
+                               case(OutCSel)
+                                   2'b00:
+                                       OutC <= mux2;
+                                   2'b01:
+                                       OutC <= mux2;
+                                   2'b10:
+                                       OutC <= mux1;
+                                   2'b11:
+                                       OutC <= mux0;
+                               endcase
+                               case(OutDSel)
+                                   2'b00:
+                                       OutD <= mux2;
+                                   2'b01:
+                                       OutD <= mux2;
+                                   2'b10:
+                                       OutD <= mux1;
+                                   2'b11:
+                                       OutD <= mux0;
+                               endcase
+                           end     
+    
+endmodule
+
+
+
+module RegisterFile(
+    input Reset,
+    input [2:0] OutASel,
+    input [2:0] OutBSel,
+    input [2:0] FunSel,
+    input [3:0] RegSel,
+    input[3:0] ScrSel,
+    input Clock,
+    input [15:0] I,
+    output reg [15:0] OutA,
+    output reg [15:0] OutB
+    
+);
+
+wire [15:0]mux0;
+    wire [15:0]mux1;
+    wire [15:0]mux2;
+    wire [15:0]mux3;
+    
+    wire [15:0]mux4;
+    wire [15:0]mux5;
+    wire [15:0]mux6;
+    wire [15:0]mux7;
+    
+        Register R1(.Reset(Reset), .Clock(Clock), .FunSel(FunSel), .I(I), .E(!RegSel[3]), .Q(mux0)); 
+        Register R2(.Reset(Reset), .Clock(Clock), .FunSel(FunSel), .I(I), .E(!RegSel[2]), .Q(mux1)); 
+        Register R3(.Reset(Reset), .Clock(Clock), .FunSel(FunSel), .I(I), .E(!RegSel[1]), .Q(mux2)); 
+        Register R4(.Reset(Reset), .Clock(Clock), .FunSel(FunSel), .I(I), .E(!RegSel[0]), .Q(mux3)); 
+        
+        Register S1(.Reset(Reset), .Clock(Clock), .FunSel(FunSel), .I(I), .E(!ScrSel[3]), .Q(mux4)); 
+        Register S2(.Reset(Reset), .Clock(Clock), .FunSel(FunSel), .I(I), .E(!ScrSel[2]), .Q(mux5)); 
+        Register S3(.Reset(Reset), .Clock(Clock), .FunSel(FunSel), .I(I), .E(!ScrSel[1]), .Q(mux6)); 
+        Register S4(.Reset(Reset), .Clock(Clock), .FunSel(FunSel), .I(I), .E(!ScrSel[0]), .Q(mux7));
+        
+        
+        always @(*) begin
+                case(OutASel)
+                    3'b000:
+                        OutA <= mux0;
+                    3'b001:
+                        OutA <= mux1;
+                    3'b010:
+                        OutA <= mux2;
+                    3'b011:
+                        OutA <= mux3;
+                    3'b100:
+                        OutA <= mux4;
+                    3'b101:
+                        OutA <= mux5;
+                    3'b110:
+                        OutA <= mux6;
+                    3'b111:
+                        OutA <= mux7;
+                endcase
+                case(OutBSel)
+                    3'b000:
+                        OutB <= mux0;
+                    3'b001:
+                        OutB <= mux1;
+                    3'b010:
+                        OutB <= mux2;
+                    3'b011:
+                        OutB <= mux3;
+                    3'b100:
+                        OutB <= mux4;
+                    3'b101:
+                        OutB <= mux5;
+                    3'b110:
+                        OutB <= mux6;
+                    3'b111:
+                        OutB <= mux7;
+                endcase
+            end
+            
+       always @(posedge Clock or negedge Reset) begin
+                if (~Reset) begin
+                    OutA <= 16'h0000;
+                    OutB <= 16'h0000;
+                end
+            end
+        
+endmodule
+
+
+
+module ArithmeticLogicUnit(
+    input Reset,
+    input Clock,
+    input [15:0] A,
+    input [15:0] B,
+    input [4:0] FunSel,
+    input WF,
+    output reg[15:0] ALUOut,
+    output reg[3:0] FlagsOut
+    );
+    
+    always @(posedge Clock or negedge Reset) begin
+                    if (~Reset) begin
+                        ALUOut <= 16'h0000;
+                        FlagsOut <= 4'b0000;
+                    end
+                end
+
+	
+    always @(*) begin
+
+    case(FunSel)
+        5'b00000:
+            begin 
+                ALUOut <= {8'b0, A[7:0]}; 
+            end 
+        5'b00001:
+            begin 
+                ALUOut <= {8'b0, B[7:0]};
+            end 
+        5'b00010:
+            begin 
+                ALUOut <= {8'b0, ~A[7:0]}; 
+           end
+        5'b00011:
+            begin 
+                ALUOut <= {8'b0, ~B[7:0]}; 
+           end
+        5'b00100:
+            begin 
+                ALUOut <= {8'b0, (A[7:0]+B[7:0])};		    
+            end 
+            
+        5'b00101:
+            begin
+                ALUOut <= {8'b0, (A[7:0]+B[7:0]+FlagsOut[2])};		              
+            end
+        5'b00110:
+            begin 
+                ALUOut <= {8'b0, (A[7:0]-B[7:0])}; // A+((~B)+1)		,  
+            end   
+        5'b00111:
+            begin 
+                ALUOut <= {8'b0, (A[7:0]&B[7:0])}; 		
+            end 
+        5'b01000:
+            begin 
+                ALUOut <= {8'b0, (A[7:0]|B[7:0])}; 
+            end            
+        5'b01001:
+            begin 
+                ALUOut <= {8'b0, (A[7:0]^B[7:0])}; //XOR		
+            end 
+        5'b01010:
+            begin 
+                ALUOut <= {8'b0, (~(A[7:0]&B[7:0]))}; //NAND		
+            end 
+        5'b01011: //logical shift left 
+            begin
+		ALUOut[15:8] <= 8'b0;
+                ALUOut[7] <= A[6];
+                ALUOut[6] <= A[5];
+                ALUOut[5] <= A[4];
+                ALUOut[4] <= A[3];
+                ALUOut[3] <= A[2];
+                ALUOut[2] <= A[1];
+                ALUOut[1] <= A[0];
+                ALUOut[0] <= 1'b0;                
+            end
+        5'b01100: //logical shift right 
+             begin
+                ALUOut[0] <= A[1];
+                ALUOut[1] <= A[2];
+                ALUOut[2] <= A[3];
+                ALUOut[3] <= A[4];
+                ALUOut[4] <= A[5];
+                ALUOut[5] <= A[6];
+                ALUOut[6] <= A[7];
+                ALUOut[7] <= 0;
+		ALUOut[15:8] <= 8'b0;               
+           end
+        5'b01101: //arithmetic shift right
+           begin
+                ALUOut[0] <= A[1];
+                ALUOut[1] <= A[2];
+                ALUOut[2] <= A[3];
+                ALUOut[3] <= A[4];
+                ALUOut[4] <= A[5];
+                ALUOut[5] <= A[6];
+                ALUOut[6] <= A[7];
+                ALUOut[7] <= A[7];
+		ALUOut[15:8] <= 8'b0;                
+             end    
+        5'b01110:
+            begin
+                ALUOut[0] <= FlagsOut[2];
+                ALUOut[1] <= A[0];
+                ALUOut[2] <= A[1];
+                ALUOut[3] <= A[2];
+                ALUOut[4] <= A[3];
+                ALUOut[5] <= A[4];
+                ALUOut[6] <= A[5];
+                ALUOut[7] <= A[6];
+		ALUOut[15:8] <= 8'b0;               
+            end
+        5'b01111:
+            begin
+                ALUOut[0] <= A[1];
+                ALUOut[1] <= A[2];
+                ALUOut[2] <= A[3];
+                ALUOut[3] <= A[4];
+                ALUOut[4] <= A[5];
+                ALUOut[5] <= A[6];
+                ALUOut[6] <= A[7];
+                ALUOut[7] <= FlagsOut[2];
+		ALUOut[15:8] <= 8'b0;               
+            end
+            5'b10000:
+                begin
+                ALUOut <= A;
+		end
+            5'b10001:
+                begin
+                ALUOut <= B;
+		end
+            5'b10010:
+                begin
+                ALUOut <= ~A; 
+		end
+            5'b10011:
+                begin
+                 ALUOut <= ~B; 
+		end
+            5'b10100:
+                begin
+                 ALUOut <= A+B;
+        
+                end
+            5'b10101:
+                begin
+                 ALUOut <= A+B+FlagsOut[2];		      
+                end
+            5'b10110:
+                begin
+                 ALUOut <=  A-B; // A+((~B)+1)
+		     end
+            5'b10111:
+                begin
+                ALUOut <= A&B;
+		end
+            5'b11000:
+                begin
+                ALUOut <= A|B; 
+		end
+            5'b11001:
+                begin
+                ALUOut <= A^B; //XOR
+		end
+            5'b11010:
+                begin
+                ALUOut <= ~(A&B); //NAND
+		end
+            5'b11011:
+                begin
+                                ALUOut[15] <= A[14];
+                                ALUOut[14] <= A[13];
+                                ALUOut[13] <= A[12];
+                                ALUOut[12] <= A[11];
+                                ALUOut[11] <= A[10];
+                                ALUOut[10] <= A[9];
+                                ALUOut[9] <= A[8];
+                                ALUOut[8] <= A[7];
+                                ALUOut[7] <= A[6];
+                                ALUOut[6] <= A[5];
+                                ALUOut[5] <= A[4];
+                                ALUOut[4] <= A[3];
+                                ALUOut[3] <= A[2];
+                                ALUOut[2] <= A[1];
+                                ALUOut[1] <= A[0];
+                                ALUOut[0] <= 1'b0;
+                end
+            5'b11100:
+                begin
+                                               ALUOut[0] <= A[1];
+                               ALUOut[1] <= A[2];
+                               ALUOut[2] <= A[3];
+                               ALUOut[3] <= A[4];
+                               ALUOut[4] <= A[5];
+                               ALUOut[5] <= A[6];
+                               ALUOut[6] <= A[7];
+                               ALUOut[7] <= A[8];
+                               ALUOut[8] <= A[9];
+                               ALUOut[9] <= A[10];
+                               ALUOut[10] <= A[11];
+                               ALUOut[11] <= A[12];
+                               ALUOut[12] <= A[13];
+                               ALUOut[13] <= A[14];
+                               ALUOut[14] <= A[15];
+                               ALUOut[15] <= 0;
+                end
+            5'b11101:
+                begin
+                               ALUOut[0] <= A[1];
+                               ALUOut[1] <= A[2];
+                               ALUOut[2] <= A[3];
+                               ALUOut[3] <= A[4];
+                               ALUOut[4] <= A[5];
+                               ALUOut[5] <= A[6];
+                               ALUOut[6] <= A[7];
+                               ALUOut[7] <= A[8];
+                               ALUOut[8] <= A[9];
+                               ALUOut[9] <= A[10];
+                               ALUOut[10] <= A[11];
+                               ALUOut[11] <= A[12];
+                               ALUOut[12] <= A[13];
+                               ALUOut[13] <= A[14];
+                               ALUOut[14] <= A[15];
+                               ALUOut[15] <= A[15];
+                end
+            5'b11110:
+                begin
+                               ALUOut[0] <= FlagsOut[2];
+                               ALUOut[1] <= A[0];
+                               ALUOut[2] <= A[1];
+                               ALUOut[3] <= A[2];
+                               ALUOut[4] <= A[3];
+                               ALUOut[5] <= A[4];
+                               ALUOut[6] <= A[5];
+                               ALUOut[7] <= A[6];
+                               ALUOut[8] <= A[7];
+                               ALUOut[9] <= A[8];
+                               ALUOut[10] <= A[9];
+                               ALUOut[11] <= A[10];
+                               ALUOut[12] <= A[11];
+                               ALUOut[13] <= A[12];
+                               ALUOut[14] <= A[13];
+                               ALUOut[15] <= A[14];
+                end
+            5'b11111:
+                begin
+                               ALUOut[0] <= A[1];
+                               ALUOut[1] <= A[2];
+                               ALUOut[2] <= A[3];
+                               ALUOut[3] <= A[4];
+                               ALUOut[4] <= A[5];
+                               ALUOut[5] <= A[6];
+                               ALUOut[6] <= A[7];
+                               ALUOut[7] <= A[8];
+                               ALUOut[8] <= A[9];
+                               ALUOut[9] <= A[10];
+                               ALUOut[10] <= A[11];
+                               ALUOut[11] <= A[12];
+                               ALUOut[12] <= A[13];
+                               ALUOut[13] <= A[14];
+                               ALUOut[14] <= A[15];
+                               ALUOut[15] <= FlagsOut[2];
+                end
+    endcase
+end
+	
+	always @(posedge Clock) begin
+	if (WF) begin
+    case(FunSel)
+        5'b00000:
+            begin                 
+                FlagsOut[3] <= (ALUOut == 8'b0) ? 1:0; // Z 
+                FlagsOut[1] <= (ALUOut[7] == 1'b1); // N
+                end
+        5'b00001:
+            begin 
+                FlagsOut[3] <= (ALUOut == 8'b0) ? 1:0; // Z 
+                FlagsOut[1] <= (ALUOut[7] == 1'b1); // N
+                end
+        5'b00010:
+            begin
+               FlagsOut[3] <= (ALUOut == 8'b0) ? 1:0; // Z 
+               FlagsOut[1] <= (ALUOut[7] == 1'b1); // N
+            end 
+        5'b00011:
+            begin 
+                FlagsOut[3] <= (ALUOut == 8'b0) ? 1:0; // Z 
+                FlagsOut[1] <= (ALUOut[7] == 1'b1); // N
+           end
+        5'b00100:
+            begin 
+                FlagsOut[3] <= (ALUOut == 8'b0) ? 1:0; // Z 
+                FlagsOut[2] <= (A[7]&B[7] | ~ALUOut[7]&A[7] | ~ALUOut[7]&B[7]); // C
+                FlagsOut[1] <= (ALUOut[7] == 1'b1); // N
+                FlagsOut[0] <= (A[7] ~^ B[7]) & (A[7] ^ ALUOut[7]); // O
+             end    
+            
+        5'b00101:
+            begin
+		FlagsOut[3] <= ((ALUOut == 8'b0) || ((ALUOut == 4'h0001) && (FlagsOut[2] == 1)));
+                //FlagsOut[3] <= (ALUOut == 8'b0) ? 1:0; // Z 
+                FlagsOut[2] <= (A[7]&B[7] | ~ALUOut[7]&A[7] | ~ALUOut[7]&B[7]); // C
+                FlagsOut[1] <= (ALUOut[7] == 1'b1); // N
+                FlagsOut[0] <= (A[7] ~^ B[7]) & (A[7] ^ ALUOut[7]); // O
+            end
+        5'b00110:
+            begin 
+                FlagsOut[3] <= (ALUOut == 8'b0) ? 1:0; // Z 
+                {FlagsOut[2],ALUOut} <= {1'b0,A[7:0]} - {1'b0,B[7:0]}; // C
+                FlagsOut[1] <= (ALUOut[7] == 1'b1); // N
+                FlagsOut[0] <= (A[7] ^ B[7]) & (A[7] ^ ALUOut[7]); // O
+            end   
+        5'b00111:
+            begin 
+                FlagsOut[3] <= (ALUOut == 8'b0) ? 1:0; // Z 
+                FlagsOut[1] <= (ALUOut[7] == 1'b1); // N
+            end 
+        5'b01000:
+            begin 
+                FlagsOut[3] <= (ALUOut == 8'b0) ? 1:0; // Z 
+                FlagsOut[1] <= (ALUOut[7] == 1'b1); // N
+                end            
+        5'b01001:
+            begin 
+                FlagsOut[3] <= (ALUOut == 8'b0) ? 1:0; // Z 
+                FlagsOut[1] <= (ALUOut[7] == 1'b1); // N
+            end 
+        5'b01010:
+            begin 
+                FlagsOut[3] <= (ALUOut == 8'b0) ? 1:0; // Z 
+                FlagsOut[1] <= (ALUOut[7] == 1'b1); // N
+                end
+        
+        5'b01011: //logical shift left 
+            begin
+               FlagsOut[2] <= A[7];  //C
+                FlagsOut[3] <= (ALUOut == 8'b0) ? 1:0; // Z 
+                FlagsOut[1] <= (ALUOut[7] == 1'b1); // N 
+                end
+        5'b01100: //logical shift right 
+             begin
+		
+                       FlagsOut[2] <= A[0];  //C
+               FlagsOut[3] <= (ALUOut == 8'b0) ? 1:0; // Z 
+               FlagsOut[1] <= (ALUOut[7] == 1'b1); // N
+               end
+                   
+        5'b01101: //arithmetic shift right
+           begin
+               FlagsOut[2] <= A[0];                          
+               FlagsOut[3] <= (ALUOut == 8'b0) ? 1:0; // Z
+             end    
+        5'b01110:
+            begin               
+               FlagsOut[2] <= A[7];                              
+               FlagsOut[3] <= (ALUOut == 8'b0) ? 1:0; // Z
+               FlagsOut[1] <= (ALUOut[7] == 1'b1); // N
+            end
+        5'b01111:
+            begin               
+               FlagsOut[2] <= A[0]; // C
+               FlagsOut[3] <= (ALUOut == 8'b0) ? 1:0; // Z
+               FlagsOut[1] <= (ALUOut[7] == 1'b1); // N
+               end              
+            5'b10000:
+                begin                                
+                FlagsOut[3] <= (ALUOut == 16'b0) ? 1:0; // Z 
+                FlagsOut[1] <= (ALUOut[15] == 1'b1);
+               end
+            5'b10001:
+                begin                              
+                FlagsOut[3] <= (ALUOut == 16'b0) ? 1:0; // Z 
+                FlagsOut[1] <= (ALUOut[15] == 1'b1); //N
+                end
+            5'b10010:
+                begin
+                FlagsOut[3] <= (ALUOut == 16'b0) ? 1:0; // Z 
+                FlagsOut[1] <= (ALUOut[15] == 1'b1); // N
+                end
+            5'b10011:
+                begin
+                 FlagsOut[3] <= (ALUOut == 16'b0) ? 1:0; // Z 
+                 FlagsOut[1] <= (ALUOut[15] == 1'b1); // N
+                end
+            5'b10100:
+                begin
+                 FlagsOut[3] <= (ALUOut == 16'b0) ? 1:0; // Z 
+                 FlagsOut[2] <= (A[15]&B[15] | ~ALUOut[15]&A[15] | ~ALUOut[15]&B[15]); // C
+                 FlagsOut[1] <= (ALUOut[15] == 1'b1); // N
+                 FlagsOut[0] <= (A[15] ~^ B[15]) & (A[15] ^ ALUOut[15]); // O
+                 end        
+            5'b10101:
+                begin
+                 FlagsOut[3] <= ((ALUOut == 16'b0) || ((ALUOut == 4'h0001) && (FlagsOut[2] == 1)));
+                 FlagsOut[2] <= (A[15]&B[15] | ~ALUOut[15]&A[15] | ~ALUOut[15]&B[15]); // C
+                 FlagsOut[1] <= (ALUOut[15] == 1'b1); // N
+                 FlagsOut[0] <= (A[15] ~^ B[15]) & (A[15] ^ ALUOut[15]); // O
+                 end                          
+            5'b10110:
+                begin
+                 FlagsOut[3] <= (ALUOut == 16'b0) ? 1:0; // Z 
+                 {FlagsOut[2],ALUOut} <= {1'b0,A} - {1'b0,B}; // C
+                 FlagsOut[1] <= (ALUOut[15] == 1'b1); // N
+                 FlagsOut[0] <= (A[15] ^ B[15]) & (A[15] ^ ALUOut[15]); // O
+                 end          
+            5'b10111:
+                begin
+                FlagsOut[3] <= (ALUOut == 16'b0) ? 1:0; // Z 
+                FlagsOut[1] <= (ALUOut[15] == 1'b1); // N
+                 end
+            5'b11000:
+                begin
+                FlagsOut[3] <= (ALUOut == 16'b0) ? 1:0; // Z 
+                FlagsOut[1] <= (ALUOut[15] == 1'b1); // N
+                 end
+            5'b11001:
+                begin
+                FlagsOut[3] <= (ALUOut == 16'b0) ? 1:0; // Z 
+                FlagsOut[1] <= (ALUOut[15] == 1'b1); // N
+                 end
+            5'b11010:
+                begin
+                FlagsOut[3] <= (ALUOut == 16'b0) ? 1:0; // Z 
+                FlagsOut[1] <= (ALUOut[15] == 1'b1); // N
+                 end
+            5'b11011:
+                begin
+                                FlagsOut[2] <= A[15];  //C                                                                                                          
+                                FlagsOut[3] <= (ALUOut == 16'b0) ? 1:0; // Z 
+                                FlagsOut[1] <= (ALUOut[15] == 1'b1); 
+                end
+            5'b11100:
+                begin
+                               FlagsOut[2] <= A[0];  //C
+                               FlagsOut[3] <= (ALUOut == 16'b0) ? 1:0; // Z 
+                               FlagsOut[1] <= (ALUOut[15] == 1'b1); // N
+                end
+            5'b11101:
+                begin
+                               FlagsOut[2] <= A[0];
+                               FlagsOut[3] <= (ALUOut == 16'b0) ? 1:0; // Z 
+                end
+            5'b11110:
+                begin
+                               
+                               FlagsOut[2] <= A[15];
+                               FlagsOut[3] <= (ALUOut == 16'b0) ? 1:0; // Z
+                               FlagsOut[1] <= (ALUOut[15] == 1'b1); // N
+                end
+            5'b11111:
+                begin
+                               FlagsOut[2] <= A[0]; // C
+                               FlagsOut[3] <= (ALUOut == 16'b0) ? 1:0; // Z
+                               FlagsOut[1] <= (ALUOut[15] == 1'b1); // N
+                end
+    endcase
+end
+	
+end   
+ 
+endmodule
+
+
+
+                                        
+module ALUSystem(
+    input Reset,
+    input IR_LH,
+    input IR_Write,
+    input [1:0] MuxBSel,
+    input [1:0] ARF_OutCSel,
+    input [1:0] ARF_OutDSel,
+    input [2:0] ARF_FunSel,
+    input [2:0] ARF_RegSel,
+    input Mem_CS,
+    input Mem_WR,
+    input [1:0] MuxASel,
+    input MuxCSel,
+    input [2:0] RF_OutASel,
+    input [2:0] RF_OutBSel,
+    input [2:0] RF_FunSel,
+    input [3:0] RF_RegSel,
+    input [3:0] RF_ScrSel,
+    input [4:0] ALU_FunSel,
+    input ALU_WF,
+    input Clock,
+    input MOVH,
+    output reg[15:0] IROutReg,
+    output reg[3:0] flagOut
+    );
+
+
+    
+    wire [15:0] IROut;
+    wire [7:0] MemOut; //mem_out;
+    wire [7:0] MuxCOut;
+    wire [15:0] Address;
+    wire [15:0] MuxBOut;
+    wire [15:0] OutC; //ARF_OutC;
+    wire [15:0] ALUOut; //ALU_Out;
+    wire [15:0] MuxAOut;
+    wire [15:0] OutA; //RF_OutA;
+    wire [15:0] OutB; //RF_OutB;
+    wire [3:0] flag;
+    
+    always@(*)begin
+        IROutReg = IROut;
+        flagOut = flag;
+    end
+	
+    assign MuxAOut = (MuxASel == 2'b00 ? ALUOut :
+                 MuxASel == 2'b01 ? OutC :
+                 MuxASel == 2'b10 ? {8'b0, MemOut} :
+                                    (MOVH == 1'b1 ? {IROut[15:8], 8'b0} :
+					            {8'b0, IROut[7:0]})
+	);
+
+	assign MuxBOut = (MuxBSel == 2'b00 ? ALUOut :
+                 MuxBSel == 2'b01 ? OutC :
+                 MuxBSel == 2'b10 ? {8'b0, MemOut} :
+                                    (MOVH == 1'b1 ? {IROut[15:8], 8'b0} :
+					            {8'b0, IROut[7:0]}) //IROut[15:0])
+	);
+
+	assign MuxCOut = (MuxCSel == 1'b0) ? ALUOut[7:0] : ALUOut[15:8];
+	
+
+  
+    RegisterFile RF(Reset, RF_OutASel, RF_OutBSel, RF_FunSel, RF_RegSel, RF_ScrSel, Clock, MuxAOut, OutA, OutB);
+    AddressRegisterFile ARF(Reset, Clock, MuxBOut, ARF_OutCSel, ARF_OutDSel, ARF_FunSel, ARF_RegSel, OutC, Address);
+    ArithmeticLogicUnit ALU(Reset, Clock, OutA, OutB, ALU_FunSel, ALU_WF, ALUOut, flag);
+    InstructionRegister IR(Reset, Clock, IR_LH, IR_Write, MemOut, IROut);
+    Memory MEM(Address, MuxCOut, Mem_WR, Mem_CS, Clock, MemOut);   
+    
+    
+    endmodule
+
+
+module InstructionRegister(
+    input Reset,
+    input Clock,           
+    input LH,   
+    input Write,        
+    input [7:0] I,       
+    output reg [15:0] IROut 
+);
+
+always @(posedge Clock or negedge Reset) begin
+                if (~Reset) begin
+                    IROut <= 16'h0000;
+                end
+            end
+
+always @(posedge Clock) 
+    if (!Write) IROut <= IROut;
+    else if(Write & !LH) IROut[7:0] <= I;
+    else if(Write & LH) IROut[15:8] <= I; 
+endmodule
+
+
+module Memory(
+    input wire[15:0] Address,
+    input wire[7:0] Data,
+    input wire WR, //Read = 0, Write = 1
+    input wire CS, //Chip is enable when cs = 0
+    input wire Clock,
+    output reg[7:0] MemOut // Output
+);
+    //Declaration of the RAM Area
+    reg[7:0] RAM_DATA[0:65535];
+    //Read Ram data from the file
+    initial $readmemh("RAM.mem", RAM_DATA);
+    //Read the selected data from RAM
+    always @(*) begin
+        MemOut = ~WR && ~CS ? RAM_DATA[Address] : 8'hZ;
+    end
+    
+    //Write the data to RAM
+    always @(posedge Clock) begin
+        if (WR && ~CS) begin
+            RAM_DATA[Address] = Data; 
+        end
+    end
+endmodule
+
+module Register(
+    input Reset,
+    input Clock,
+    input [2:0] FunSel,
+    input E,
+    input [15:0] I,
+    output reg [15:0] Q
+);
+
+always @(posedge Clock or negedge Reset) begin
+    if (~Reset) begin
+        Q <= 16'b0;
+    end else if (E) begin
+        case (FunSel)
+            3'b000: Q <= Q - 1;
+            3'b001: Q <= Q + 1;
+            3'b010: Q <= I;
+            3'b011: Q <= 16'b0;
+            3'b100: Q <= {8'b0, I[7:0]};
+            3'b101: Q[7:0] <= I[7:0];
+            3'b110: Q[15:8] <= I[7:0];
+            3'b111: Q <= {{8{I[7]}}, I[7:0]};
+        endcase
+    end
+end
+
+endmodule
+
+
+//PROJECT1
+
+module Fetch(
+    input Reset,
+    input Clock,
+	input T0,
+	input T1,
+	output reg Write,
+	output reg LH
+);
+
+    always @(posedge Clock or negedge Reset) begin
+                if (~Reset) begin
+                    Write <= 1'b0;
+                    LH <= 1'b0;
+                end
+            end
+            
+	always @(*) begin
+		if(T0) begin
+			Write = 1;
+			LH = 0;
+		end
+		else if(T1) begin
+			Write = 1;
+			LH = 1;
+		end	    
+	end
+endmodule
+
+module WFSel(
+    input Reset,
+    input Clock,
+	input S,
+	output reg ALU_WF	
+);
+    always @(posedge Clock or negedge Reset) begin
+                if (~Reset) begin
+                    ALU_WF <= 1'b0;
+                end
+            end
+
+	always @(*) begin
+		ALU_WF = S;
+	end
+endmodule
+
+module InstructionDecoder(
+    input Reset,
+    input Clock,
+	input T2,
+	input [15:0] InstDecInp,
+	output reg[2:0] SREG1,
+	output reg[2:0] SREG2,
+	output reg[2:0] DSTREG,
+	output reg S,
+	output reg[7:0] Address,
+	output reg[1:0] RSel,
+	output reg[5:0] Opcode
+);
+    always @(posedge Clock or negedge Reset) begin
+                if (~Reset) begin
+                    SREG1 <= 3'b000;
+                    SREG2 <= 3'b000;
+                    DSTREG <= 3'b000;
+                    S <= 1'b0;
+                    Address <= 8'b0;
+                    RSel <= 2'b0;
+                    Opcode <= 6'b0;
+                end
+            end
+
+	always@(*) begin
+		if(T2) begin
+			Address = InstDecInp[7:0];
+			RSel = InstDecInp[9:8];
+			Opcode = InstDecInp[15:10];
+			SREG2 = InstDecInp[2:0];
+			SREG1 = InstDecInp[5:3];
+			DSTREG = InstDecInp[8:6];
+			S = InstDecInp[9];	
+		end
+	end
+endmodule
+
+
+module OpcodeDecoder(
+    input Reset,
+    input Clock,
+	input T2,
+	input[5:0] Opcode,
+	output reg BRA, BNE, BEQ, POP, PSH, INC, DEC, LSL, LSR, ASR, CSL, CSR, AND, ORR, NOT, XOR, NAND, MOVH, LDR, STR, MOVL, ADD, ADC, SUB, MOVS, ADDS, SUBS, ANDS, ORRS, XORS, BX, BL, LDRIM, STRIM
+);
+
+	always@(*) begin
+		if(T2) begin
+			BRA = (~Opcode[5] & ~Opcode[4] & ~Opcode[3] & ~Opcode[2] & ~Opcode[1] & ~Opcode[0]);
+			BNE = (~Opcode[5] & ~Opcode[4] & ~Opcode[3] & ~Opcode[2] & ~Opcode[1] & Opcode[0]);
+			BEQ = (~Opcode[5] & ~Opcode[4] & ~Opcode[3] & ~Opcode[2] & Opcode[1] & ~Opcode[0]);
+			POP = (~Opcode[5] & ~Opcode[4] & ~Opcode[3] & ~Opcode[2] & Opcode[1] & Opcode[0]);
+			PSH = (~Opcode[5] & ~Opcode[4] & ~Opcode[3] & Opcode[2] & ~Opcode[1] & ~Opcode[0]);
+			INC = (~Opcode[5] & ~Opcode[4] & ~Opcode[3] & Opcode[2] & ~Opcode[1] & Opcode[0]);
+			DEC = (~Opcode[5] & ~Opcode[4] & ~Opcode[3] & Opcode[2] & Opcode[1] & ~Opcode[0]);
+			LSL = (~Opcode[5] & ~Opcode[4] & ~Opcode[3] & Opcode[2] & Opcode[1] & Opcode[0]);
+			LSR = (~Opcode[5] & ~Opcode[4] & Opcode[3] & ~Opcode[2] & ~Opcode[1] & ~Opcode[0]);
+			ASR = (~Opcode[5] & ~Opcode[4] & Opcode[3] & ~Opcode[2] & ~Opcode[1] & Opcode[0]);
+			CSL = (~Opcode[5] & ~Opcode[4] & Opcode[3] & ~Opcode[2] & Opcode[1] & ~Opcode[0]);
+			CSR = (~Opcode[5] & ~Opcode[4] & Opcode[3] & ~Opcode[2] & Opcode[1] & Opcode[0]);
+			AND = (~Opcode[5] & ~Opcode[4] & Opcode[3] & Opcode[2] & ~Opcode[1] & ~Opcode[0]);
+			ORR = (~Opcode[5] & ~Opcode[4] & Opcode[3] & Opcode[2] & ~Opcode[1] & Opcode[0]);
+			NOT = (~Opcode[5] & ~Opcode[4] & Opcode[3] & Opcode[2] & Opcode[1] & ~Opcode[0]);
+			XOR = (~Opcode[5] & ~Opcode[4] & Opcode[3] & Opcode[2] & Opcode[1] & Opcode[0]);
+			NAND = (~Opcode[5] & Opcode[4] & ~Opcode[3] & ~Opcode[2] & ~Opcode[1] & ~Opcode[0]);
+			MOVH = (~Opcode[5] & Opcode[4] & ~Opcode[3] & ~Opcode[2] & ~Opcode[1] & Opcode[0]);
+			LDR = (~Opcode[5] & Opcode[4] & ~Opcode[3] & ~Opcode[2] & Opcode[1] & ~Opcode[0]);
+			STR = (~Opcode[5] & Opcode[4] & ~Opcode[3] & ~Opcode[2] & Opcode[1] & Opcode[0]);
+			MOVL = (~Opcode[5] & Opcode[4] & ~Opcode[3] & Opcode[2] & ~Opcode[1] & ~Opcode[0]);
+			ADD = (~Opcode[5] & Opcode[4] & ~Opcode[3] & Opcode[2] & ~Opcode[1] & Opcode[0]);
+			ADC = (~Opcode[5] & Opcode[4] & ~Opcode[3] & Opcode[2] & Opcode[1] & ~Opcode[0]);
+			SUB = (~Opcode[5] & Opcode[4] & ~Opcode[3] & Opcode[2] & Opcode[1] & Opcode[0]);
+			MOVS = (~Opcode[5] & Opcode[4] & Opcode[3] & ~Opcode[2] & ~Opcode[1] & ~Opcode[0]);
+			ADDS = (~Opcode[5] & Opcode[4] & Opcode[3] & ~Opcode[2] & ~Opcode[1] & Opcode[0]);
+			SUBS = (~Opcode[5] & Opcode[4] & Opcode[3] & ~Opcode[2] & Opcode[1] & ~Opcode[0]);
+			ANDS = (~Opcode[5] & Opcode[4] & Opcode[3] & ~Opcode[2] & Opcode[1] & Opcode[0]);
+			ORRS = (~Opcode[5] & Opcode[4] & Opcode[3] & Opcode[2] & ~Opcode[1] & ~Opcode[0]);
+			XORS = (~Opcode[5] & Opcode[4] & Opcode[3] & Opcode[2] & ~Opcode[1] & Opcode[0]);
+			BX = (~Opcode[5] & Opcode[4] & Opcode[3] & Opcode[2] & Opcode[1] & ~Opcode[0]);
+			BL = (~Opcode[5] & Opcode[4] & Opcode[3] & Opcode[2] & Opcode[1] & Opcode[0]);
+			LDRIM = (Opcode[5] & ~Opcode[4] & ~Opcode[3] & ~Opcode[2] & ~Opcode[1] & ~Opcode[0]);
+			STRIM = (Opcode[5] & ~Opcode[4] & ~Opcode[3] & ~Opcode[2] & ~Opcode[1] & Opcode[0]);
+		end
+	end
+endmodule
+
+
+module DecoderReg(
+    input Reset,
+    input Clock,
+	input T2,
+	input[2:0] Reg,
+	output reg OutReg,
+	output reg OutArf 
+);
+
+    always @(posedge Clock or negedge Reset) begin
+                if (~Reset) begin
+                    OutReg <= 1'b0;
+                    OutArf <= 1'b0;
+                end
+            end
+
+	always @(*) begin
+		if(T2)
+			case(Reg[2])
+				1'b0: OutArf = 1'b1;
+				1'b1: OutReg = 1'b1; 
+			endcase
+	end
+endmodule
+
+
+
+module Mem(
+    input Reset,
+    input Clock,
+	input T0,
+	input T1,
+	input T3,
+	input T4,
+	input T5,
+	input T6,
+	input T8,
+	input POP,
+	input PSH,
+	input LDR,
+	input STR,
+	input BL,
+	input BX,
+	input STRIM,
+	output reg WR,
+	output reg CS
+);
+	wire wireWR0;
+	wire wireWR1;
+	wire wireCS;
+
+	assign wireWR0 = ((POP | LDR | BL) & T3) | (T0 | T1);
+	assign wireWR1 = ((PSH | STR) & T3) | (BX & T4) | ((PSH | STR) & T5) | (STRIM & (T6 | T8));
+	assign wireCS = wireWR0 | wireWR1;
+
+always @(posedge Clock or negedge Reset) begin
+                if (~Reset) begin
+                    WR <= 1'b0;
+                    CS <= 1'b1;
+                end
+            end
+
+	always@(*) begin
+		if(wireWR0) WR = 0;
+		if(wireWR1) WR = 1;
+		if(wireCS) CS = 0;
+	end
+endmodule
+
+
+module Time(
+    input Reset,
+    input Clock,
+    output reg T0,
+    output reg T1,
+    output reg T2,
+    output reg T3,
+    output reg T4,
+    output reg T5,
+    output reg T6,
+    output reg T7,
+    output reg T8
+);
+    reg [3:0] counter;
+
+    always @(posedge Clock or negedge Reset) begin
+        if (~Reset) begin
+            counter <= 4'b0000;
+            T0 <= 1'b0;
+            T1 <= 1'b0;
+            T2 <= 1'b0;
+            T3 <= 1'b0;
+            T4 <= 1'b0;
+            T5 <= 1'b0;
+            T6 <= 1'b0;
+            T7 <= 1'b0;
+            T8 <= 1'b0;
+        end else begin
+            case (counter)
+                4'b0000: begin
+                    T8 <= 1'b0;
+                    T0 <= 1'b1;
+                end
+                4'b0001: begin
+                    T0 <= 1'b0;
+                    T1 <= 1'b1;
+                end
+                4'b0010: begin
+                    T1 <= 1'b0;
+                    T2 <= 1'b1;
+                end
+                4'b0011: begin
+                    T2 <= 1'b0;
+                    T3 <= 1'b1;
+                end
+                4'b0100: begin
+                    T3 <= 1'b0;
+                    T4 <= 1'b1;
+                end
+                4'b0101: begin
+                    T4 <= 1'b0;
+                    T5 <= 1'b1;
+                end
+                4'b0110: begin
+                    T5 <= 1'b0;
+                    T6 <= 1'b1;
+                end
+                4'b0111: begin
+                    T6 <= 1'b0;
+                    T7 <= 1'b1;
+                end
+                4'b1000: begin
+                    T7 <= 1'b0;
+                    T8 <= 1'b1;
+                end
+            endcase
+            counter <= counter + 1;
+            if (counter == 8)
+                counter <= 0;
+        end
+    end
+endmodule
+
+
+
+module MuxASel(
+    input Clock,
+	input AND,
+	input ORR,
+	input ADD,
+	input SUB,
+	input ADC,
+	input XOR,
+	input NAND,
+	input ADDS,
+	input SUBS,
+	input ANDS,
+	input ORRS,
+	input XORS,
+	input MOVS,
+	input INC,
+	input DEC,
+	input LSL,
+	input LSR,
+	input ASR,
+	input CSL,
+	input CSR,
+	input NOT,
+	input POP,
+	input LDR,
+	input BX,
+	input LDRIM,
+	input STRIM,
+	input MOVH,
+	input MOVL,
+	input BRA,
+	input BNE,
+	input BEQ,
+	input T3,
+	input T4,
+	input T5,
+	input SRC1REG,
+	input SRC2REG,
+	input DESTREG,
+	input SRC1ARF,
+	input SRC2ARF,
+	input DESTARF,
+	output reg[1:0] Mux_A_Sel
+);
+	wire wire0;
+	wire wire1;
+	wire wire2;	
+	wire wire3;
+
+	assign wire0 = ((AND | ORR | ADD | SUB | ADC | XOR | NAND | ADDS | SUBS | ANDS | ORRS | XORS) & (DESTREG & SRC1REG & (SRC2REG & T3)) | (SRC2ARF & T4)) | ((AND | ORR | ADD | SUB | ADC | XOR | NAND | ADDS | SUBS | ANDS | ORRS | XORS) & T5) | ((MOVS & T4) | (MOVS & SRC1REG & T3)) | ((INC | DEC) & DESTREG & SRC1REG & T4) | (((LSL | LSR | ASR | CSL | CSR | NOT) & SRC1ARF & T3) | ((LSL | LSR | ASR | CSL | CSR | NOT) & DESTREG & SRC1REG & T3));
+	assign wire1 = ((AND | ORR | ADD | SUB | ADC | XOR | NAND | ADDS | SUBS | ANDS | ORRS | XORS) & SRC1ARF & SRC2ARF & (T3 | T4)) | ((AND | ORR | ADD | SUB | ADC | XOR | NAND | ADDS | SUBS | ANDS | ORRS | XORS) & ((SRC1REG & SRC2ARF) | (SRC1ARF & SRC2REG)) & T3) | (MOVS & SRC1ARF & T3) | ((INC | DEC) & DESTREG & SRC1ARF & T4) | (BX & T3) | (STRIM & T4) | ((BRA | BNE | BEQ) & T4);
+	assign wire2 = (POP | LDR) & T3;
+	assign wire3 = ((LDRIM | STRIM | BNE | BEQ | BRA) & T3) | ((MOVH | MOVL) & DESTREG & T3); 
+
+	always @(*) begin
+		if(wire0) Mux_A_Sel = 2'b00;
+		if(wire1) Mux_A_Sel = 2'b01;
+		if(wire2) Mux_A_Sel = 2'b10;
+		if(wire3) Mux_A_Sel = 2'b11;
+	end
+endmodule
+
+
+module MuxBSel(
+    input Clock,
+	input AND,
+	input ORR,
+	input ADD,
+	input SUB,
+	input ADC,
+	input XOR,
+	input NAND,
+	input ADDS,
+	input SUBS,
+	input ANDS,
+	input ORRS,
+	input XORS,
+	input MOVS,
+	input INC,
+	input DEC,
+	input LSL,
+	input LSR,
+	input ASR,
+	input CSL,
+	input CSR,
+	input NOT,
+	input BL,
+	input BX,
+	input STRIM,
+	input MOVH,
+	input MOVL,
+	input BRA,
+	input BNE,
+	input BEQ,
+	input T3,
+	input T4,
+	input T5,
+	input T7,
+	input SRC1REG,
+	input SRC2REG,
+	input DESTREG,
+	input SRC1ARF,
+	input SRC2ARF,
+	input DESTARF,
+	output reg[1:0] Mux_B_Sel
+);
+	wire wire0;
+	wire wire1;
+	wire wire2;	
+	wire wire3;
+
+	assign wire0 = ((AND | ORR | ADD | SUB | ADC | XOR | NAND | ADDS | SUBS | ANDS | ORRS | XORS) & DESTARF & (T3 | T4 | T5)) | (MOVS & DESTARF & SRC1REG & T3) | (MOVS & DESTARF & SRC1ARF & T4) | ((INC | DEC) & DESTARF & SRC1REG & T4) | ((LSL | LSR | ASR | CSL | CSR | NOT) & DESTARF & SRC1ARF & T4) | ((LSL | LSR | ASR | CSL | CSR | NOT) & DESTARF & SRC1REG & T3) | ((STRIM | BRA | BNE | BEQ) & T5) | (BX & T7);
+	assign wire1 = (INC | DEC) & DESTARF & SRC1ARF & T4;
+	assign wire2 = BL & T3;
+	assign wire3 = (MOVH | MOVL) & DESTARF & T3;
+
+	always @(*) begin
+		if(wire0) Mux_B_Sel = 2'b00;
+		if(wire1) Mux_B_Sel = 2'b01;
+		if(wire2) Mux_B_Sel = 2'b10;
+		if(wire3) Mux_B_Sel = 2'b11;
+	end 
+endmodule
+
+
+
+module MuxCSel(
+    input Clock,
+	input PSH,
+	input STR,
+	input BX,
+	input STRIM,
+	input T3,
+	input T4,
+	input T5,
+	input T6,
+	input T8,
+	output reg SelMuxC
+);
+	wire wire0;
+	wire wire1;
+
+	assign wire0 = ((PSH | STR) & T3) | (BX & T4) | (STRIM & T6);
+	assign wire1 = ((PSH | STR) & T5) | (BX & T6) | (STRIM & T8);
+
+	always @(*) begin
+		if(wire0) SelMuxC = 1'b0;
+		if(wire1) SelMuxC = 1'b1;
+	end
+endmodule
+
+
+
+module AluFunSel(
+    input Clock,
+	input AND,
+	input ORR,
+	input ADD,
+	input SUB,
+	input ADC,
+	input XOR,
+	input NAND,
+	input ADDS,
+	input SUBS,
+	input ANDS,
+	input ORRS,
+	input XORS,
+	input MOVS,
+	input INC,
+	input DEC,
+	input LSL,
+	input LSR,
+	input ASR,
+	input CSL,
+	input CSR,
+	input NOT,
+	input PSH,
+	input STR,
+	input BX,
+	input STRIM,
+	input BRA,
+	input BNE,
+	input BEQ,
+	input T3,
+	input T4,
+	input T5,
+	input T7,
+	input SRC1REG,
+	input SRC2REG,
+	input SRC1ARF,
+	input SRC2ARF,
+	output reg[4:0] FunSelAlu
+);
+	wire wire0;
+	wire wire1;
+	wire wire2;
+	wire wire3;
+	wire wire4;
+	wire wire5;
+	wire wire6;
+	wire wire7;
+	wire wire8;
+	wire wire9;
+	wire wire10;
+	wire wire11;
+	wire wire12;
+	wire wire13;
+
+	assign wire0 = (MOVS & SRC1REG & T3) | (MOVS & SRC1ARF & T4) | ((INC | DEC) & SRC1REG & T4) | ((PSH | STR) & T3) | (BX & (T4 | T7));
+	assign wire1 = (NOT & SRC1ARF & T4) | (NOT & SRC1REG & T3);
+	assign wire2 = ((ADD | ADDS) & SRC1REG & SRC2REG & T3) | ((ADD | ADDS) & ((SRC1REG & SRC2ARF) | (SRC1ARF & SRC2REG)) & T4) | ((ADD | ADDS) & SRC1ARF & SRC2ARF & T5) | ((STRIM | BRA | BNE | BEQ) & T5);
+	assign wire3 = (ADC & SRC1REG & SRC2REG & T3) | (ADC & ((SRC1REG & SRC2ARF) | (SRC1ARF & SRC2REG)) & T4) | (ADC & SRC1ARF & SRC2ARF & T5);
+	assign wire4 = ((SUB | SUBS) & SRC1REG & SRC2REG & T3) | ((SUB | SUBS) & ((SRC1REG & SRC2ARF) | (SRC1ARF & SRC2REG)) & T4) | ((SUB | SUBS) & SRC1ARF & SRC2ARF & T5);
+	assign wire5 = ((AND | ANDS) & SRC1REG & SRC2REG & T3) | ((AND | ANDS) & ((SRC1REG & SRC2ARF) | (SRC1ARF & SRC2REG)) & T4) | ((AND | ANDS) & SRC1ARF & SRC2ARF & T5);
+	assign wire6 = ((ORR | ORRS) & SRC1REG & SRC2REG & T3) | ((ORR | ORRS) & ((SRC1REG & SRC2ARF) | (SRC1ARF & SRC2REG)) & T4) | ((ORR | ORRS) & SRC1ARF & SRC2ARF & T5);
+	assign wire7 = ((XOR | XORS) & SRC1REG & SRC2REG & T3) | ((XOR | XORS) & ((SRC1REG & SRC2ARF) | (SRC1ARF & SRC2REG)) & T4) | ((XOR | XORS) & SRC1ARF & SRC2ARF & T5);
+	assign wire8 = (NAND & SRC1REG & SRC2REG & T3) | (NAND & ((SRC1REG & SRC2ARF) | (SRC1ARF & SRC2REG)) & T4) | (NAND & SRC1ARF & SRC2ARF & T5);
+	assign wire9 = (LSL & SRC1ARF & T4) | (LSL & SRC1REG & T3);
+	assign wire10 = (LSR & SRC1ARF & T4) | (LSR & SRC1REG & T3);
+	assign wire11 = (ASR & SRC1ARF & T4) | (ASR & SRC1REG & T3);
+	assign wire12 = (CSL & SRC1ARF & T4) | (CSL & SRC1REG & T3);
+	assign wire13 = (CSR & SRC1ARF & T4) | (CSR & SRC1REG & T3);
+
+	always @(*) begin
+		if(wire0) FunSelAlu = 5'b10000; //A
+		if(wire1) FunSelAlu = 5'b10010; //~A
+		if(wire2) FunSelAlu = 5'b10100; //ADD
+		if(wire3) FunSelAlu = 5'b10101; //ADC
+		if(wire4) FunSelAlu = 5'b10110; //SUB
+		if(wire5) FunSelAlu = 5'b10111; //AND
+		if(wire6) FunSelAlu = 5'b11000; //ORR
+		if(wire7) FunSelAlu = 5'b11001; //XOR
+		if(wire8) FunSelAlu = 5'b11010; //NAND
+		if(wire9) FunSelAlu = 5'b11011; //LSL
+		if(wire10) FunSelAlu = 5'b11100; //LSR
+		if(wire11) FunSelAlu = 5'b11101; //ASR
+		if(wire12) FunSelAlu = 5'b11110; //CSL
+		if(wire13) FunSelAlu = 5'b11111; //CSR
+	end	
+
+endmodule
+
+
+
+module ArfFunSel(
+    input Clock,
+	input AND,
+	input ORR,
+	input ADD,
+	input SUB,
+	input ADC,
+	input XOR,
+	input NAND,
+	input ADDS,
+	input SUBS,
+	input ANDS,
+	input ORRS,
+	input XORS,
+	input MOVS,
+	input INC,
+	input DEC,
+	input LSL,
+	input LSR,
+	input ASR,
+	input CSL,
+	input CSR,
+	input NOT,
+	input POP,
+	input PSH,
+	input BL,
+	input BX,
+	input STR,
+	input STRIM,
+	input MOVH,
+	input MOVL,
+	input BRA,
+	input BNE,
+	input BEQ,
+	input T0,
+	input T3,
+	input T4,
+	input T5,
+	input T6,
+	input T7,
+	input SRC1REG,
+	input SRC2REG,
+	input SRC1ARF,
+	input SRC2ARF,
+	input DESTREG,
+	input DESTARF,
+	output reg[2:0] FunSelArf
+);
+	wire wire0;
+	wire wire1;
+	wire wire2;
+
+	assign wire0 = (DEC & SRC1ARF & T3) | (PSH & (T6 | T7));
+	assign wire1 = (INC & SRC1ARF & T3) | ((POP | PSH | STR) & T4) | T0 | (STRIM & T7) | (BX & T5);
+	assign wire2 = ((AND | ORR | ADD | SUB | ADC | XOR | NAND | ADDS | SUBS | ANDS | ORRS | XORS) & DESTARF & SRC1REG & SRC2REG & T3) | ((AND | ORR | ADD | SUB | ADC | XOR | NAND | ADDS | SUBS | ANDS | ORRS | XORS) & DESTARF & ((SRC1REG & SRC2ARF) | (SRC1ARF & SRC2REG)) & T4) | ((AND | ORR | ADD | SUB | ADC | XOR | NAND | ADDS | SUBS | ANDS | ORRS | XORS) & DESTARF & SRC1ARF & SRC2ARF & T5) | (MOVS & DESTARF & SRC1REG & T3) | (MOVS & DESTARF & SRC1ARF & T4) | ((INC | DEC) & DESTARF & SRC1REG & T4) | ((INC | DEC) & DESTARF & SRC1ARF & T5) | ((LSL | LSR | ASR | CSL | CSR | NOT) & DESTARF & SRC1ARF & T4) | ((LSL | LSR | ASR | CSL | CSR | NOT) & DESTARF & SRC1REG & T3) | (BL & T4) | (STRIM & T5) | ((MOVH | MOVL) & DESTARF & T3) | ((BRA | BNE | BEQ) & T5) | (BX & T7); 
+
+	always @(*) begin
+		if(wire0) FunSelArf = 3'b000;
+		if(wire1) FunSelArf = 3'b001;
+		if(wire2) FunSelArf = 3'b010;
+	end
+endmodule
+
+
+module RegFunSel(
+    input Clock,
+	input AND,
+	input ORR,
+	input ADD,
+	input SUB,
+	input ADC,
+	input XOR,
+	input NAND,
+	input ADDS,
+	input SUBS,
+	input ANDS,
+	input ORRS,
+	input XORS,
+	input MOVS,
+	input INC,
+	input DEC,
+	input LSL,
+	input LSR,
+	input ASR,
+	input CSL,
+	input CSR,
+	input NOT,
+	input POP,
+	input LDR,
+	input BX,
+	input LDRIM,
+	input STRIM,
+	input BRA,
+	input BNE,
+	input BEQ,
+	input MOVH,
+	input MOVL,
+	input T3,
+	input T4,
+	input T5,
+	input T6,
+	input SRC1REG,
+	input SRC2REG,
+	input SRC1ARF,
+	input SRC2ARF,
+	input DESTREG,
+	input DESTARF,
+	output reg[2:0] FunSelReg
+);
+	wire wire0;
+	wire wire1;
+	wire wire2;
+
+	assign wire0 = DEC & SRC1REG & T3;
+	assign wire1 = INC & SRC1REG & T3;
+	assign wire2 = ((AND | ORR | ADD | SUB | ADC | XOR | NAND | ADDS | SUBS | ANDS | ORRS | XORS) & DESTREG & SRC1REG & SRC2REG & T4) | ((AND | ORR | ADD | SUB | ADC | XOR | NAND | ADDS | SUBS | ANDS | ORRS | XORS) & ((SRC1REG & SRC2ARF) | (SRC1ARF & SRC2REG)) & T3) | ((AND | ORR | ADD | SUB | ADC | XOR | NAND | ADDS | SUBS | ANDS | ORRS | XORS) & DESTREG & SRC1REG & SRC2ARF & T5) | ((AND | ORR | ADD | SUB | ADC | XOR | NAND | ADDS | SUBS | ANDS | ORRS | XORS) & DESTREG & SRC1ARF & SRC2ARF & (T3 | T4 | T6)) | ((AND | ORR | ADD | SUB | ADC | XOR | NAND | ADDS | SUBS | ANDS | ORRS | XORS) & DESTARF & SRC1ARF & SRC2ARF & (T3 | T4)) | (MOVS & DESTREG & SRC1REG & T4) | (MOVS & DESTREG & SRC1ARF & (T3 | T5)) | (MOVS & DESTARF & SRC1ARF & T3) | ((INC | DEC) & DESTARF & SRC1REG & T5) | ((INC | DEC) & DESTREG & SRC1ARF & T4) | ((LSL | LSR | ASR | CSL | CSR | NOT) & SRC1ARF & T3) | ((LSL | LSR | ASR | CSL | CSR | NOT) & DESTREG & T4) | ((POP | LDR | BX | LDRIM) & T3) | ((STRIM | BRA | BNE | BEQ) & (T3 | T4)) | ((MOVH | MOVL) & DESTREG & T3);
+	
+	always @(*) begin
+		if(wire0) FunSelReg = 3'b000;
+		if(wire1) FunSelReg = 3'b001;
+		if(wire2) FunSelReg = 3'b010;
+	end
+endmodule
+
+
+module ArfRegSel(
+    input Clock,
+	input AND,
+	input ORR,
+	input ADD,
+	input SUB,
+	input ADC,
+	input XOR,
+	input NAND,
+	input ADDS,
+	input SUBS,
+	input ANDS,
+	input ORRS,
+	input XORS,
+	input MOVS,
+	input INC,
+	input DEC,
+	input LSL,
+	input LSR,
+	input ASR,
+	input CSL,
+	input CSR,
+	input NOT,
+	input POP,
+	input PSH,
+	input BL,
+	input BX,
+	input STRIM,
+	input STR,
+	input BRA,
+	input BNE,
+	input BEQ,
+	input MOVH,
+	input MOVL,
+	input SRC1REG,
+	input SRC2REG,
+	input SRC1ARF,
+	input SRC2ARF,
+	input DESTARF,
+	input T0,
+	input T1,
+	input T3,
+	input T4,
+	input T5,
+	input T6,
+	input T7,
+	input Z,
+	input [2:0]DSTREG,
+	input [2:0]SREG1,
+	output reg[2:0] RegSelArf 
+);
+	wire wireDSTREG;
+	wire wireSREG1;
+	wire wire0;
+	wire wire1;
+	wire wire2;
+	wire wire3;
+
+	assign wireDSTREG = ((AND | ORR | ADD | SUB | ADC | XOR | NAND | ADDS | SUBS | ANDS | ORRS | XORS) & DESTARF & SRC1REG & SRC2REG & T3) | ((AND | ORR | ADD | SUB | ADC | XOR | NAND | ADDS | SUBS | ANDS | ORRS | XORS) & DESTARF & ((SRC1REG & SRC2ARF) | (SRC1ARF & SRC2REG)) & T4) | ((AND | ORR | ADD | SUB | ADC | XOR | NAND | ADDS | SUBS | ANDS | ORRS | XORS) & DESTARF & SRC1ARF & SRC2ARF & T5) | (MOVS & DESTARF & SRC1REG & T3) | (MOVS & DESTARF & SRC1ARF & T4) | ((INC | DEC) & DESTARF & SRC1REG & T4) | ((INC | DEC) & DESTARF & SRC1ARF & T5) | ((LSL | LSR | ASR | CSL | CSR | NOT) & DESTARF & SRC1ARF & T4) | ((LSL | LSR | ASR | CSL | CSR | NOT) & DESTARF & SRC1REG & T3) | ((MOVH | MOVL) & DESTARF & T3);
+	assign wireSREG1 = (INC | DEC) & SRC1ARF & T3;
+	assign wire0 = (BL & T4) | ((BRA | (BNE & ~Z) | (BEQ & Z)) & T5) | T0 | T1 | (BX & T7);
+	assign wire1 = (STRIM & (T5 | T7)) | (STR & T4);
+	assign wire2 = ((POP | PSH) & T4) | (PSH & (T6 | T7)) | (BX & T5);
+	assign wire3 = ((BNE & Z) | (BEQ & ~Z)) & T5;
+
+	always @(*) begin
+		if(wireDSTREG)
+			case(DSTREG[2:0])
+				3'b000: RegSelArf = 3'b011; //PC
+				3'b001: RegSelArf = 3'b011; //PC
+				3'b010: RegSelArf = 3'b110; //SP
+				3'b011: RegSelArf = 3'b101; //AR
+			endcase
+		else if(wireSREG1)
+			case(SREG1[2:0])
+				3'b000: RegSelArf = 3'b011; //PC
+				3'b001: RegSelArf = 3'b011; //PC
+				3'b010: RegSelArf = 3'b110; //SP
+				3'b011: RegSelArf = 3'b101; //AR
+			endcase
+		else if(wire0) RegSelArf = 3'b011; //PC
+		else if(wire1) RegSelArf = 3'b101; //AR
+		else if(wire2) RegSelArf = 3'b110; //SP
+		else RegSelArf = 3'b111; //Disable All
+	end
+endmodule
+
+
+module RegRegSel(
+    input Clock,
+	input AND,
+	input ORR,
+	input ADD,
+	input SUB,
+	input ADC,
+	input XOR,
+	input NAND,
+	input ADDS,
+	input SUBS,
+	input ANDS,
+	input ORRS,
+	input XORS,
+	input MOVS,
+	input INC,
+	input DEC,
+	input LSL,
+	input LSR,
+	input ASR,
+	input CSL,
+	input CSR,
+	input NOT,
+	input POP,
+	input LDR,
+	input LDRIM,
+	input MOVH,
+	input MOVL,
+	input SRC1REG,
+	input SRC2REG,
+	input SRC1ARF,
+	input SRC2ARF,
+	input DESTREG,
+	input T3,
+	input T4,
+	input T5,
+	input T6,
+	input [1:0]RSel,
+	input [2:0]DSTREG,
+	input [2:0]SREG1,
+	output reg[3:0] RegSelReg	
+);
+	wire wireRSel;
+	wire wireSREG1;
+	wire wireDSTREG;
+
+	assign wireRSel = (POP | LDR | LDRIM) & T3;
+	assign wireSREG1 = (INC | DEC) & SRC1REG & T3;
+	assign wireDSTREG = ((AND | ORR | ADD | SUB | ADC | XOR | NAND | ADDS | SUBS | ANDS | ORRS | XORS) & DESTREG & SRC1REG & SRC2REG & T4) | ((AND | ORR | ADD | SUB | ADC | XOR | NAND | ADDS | SUBS | ANDS | ORRS | XORS) & DESTREG & ((SRC1ARF & SRC2REG) | (SRC1REG & SRC2ARF)) & T5) | ((AND | ORR | ADD | SUB | ADC | XOR | NAND | ADDS | SUBS | ANDS | ORRS | XORS) & DESTREG & SRC1ARF & SRC2ARF & T6) | (MOVS & DESTREG & SRC1REG & T4) | (MOVS & DESTREG & SRC1ARF & T5) | ((INC | DEC) & DESTREG & SRC1REG & T5) | ((INC | DEC) & DESTREG & SRC1ARF & T4) | ((LSL | LSR | ASR | CSL | CSR | NOT) & DESTREG & T4) | ((MOVH | MOVL) & DESTREG & T3);
+
+	always @(*) begin
+		if(wireRSel)
+			case(RSel[1:0])
+				2'b00: RegSelReg = 4'b0111; //R1
+				2'b01: RegSelReg = 4'b1011; //R2
+				2'b10: RegSelReg = 4'b1101; //R3
+				2'b11: RegSelReg = 4'b1110; //R4
+			endcase
+		else if(wireSREG1)
+			case(SREG1[2:0])
+				3'b100: RegSelReg = 4'b0111; //R1
+				3'b101: RegSelReg = 4'b1011; //R2
+				3'b110: RegSelReg = 4'b1101; //R3
+				3'b111: RegSelReg = 4'b1110; //R4
+			endcase
+		else if(wireDSTREG)
+			case(DSTREG[2:0])
+				3'b100: RegSelReg = 4'b0111; //R1
+				3'b101: RegSelReg = 4'b1011; //R2
+				3'b110: RegSelReg = 4'b1101; //R3
+				3'b111: RegSelReg = 4'b1110; //R4
+			endcase
+		else RegSelReg = 4'b1111;
+	end
+endmodule
+
+
+module RegScrSel (
+    input Clock,
+	input AND,
+	input ORR,
+	input ADD,
+	input SUB,
+	input ADC,
+	input XOR,
+	input NAND,
+	input ADDS,
+	input SUBS,
+	input ANDS,
+	input ORRS,
+	input XORS,
+	input MOVS,
+	input LSL,
+	input LSR,
+	input ASR,
+	input CSL,
+	input CSR,
+	input NOT,
+	input BX,
+	input STRIM,
+	input BRA,
+	input BNE,
+	input BEQ,
+	input T3,
+	input T4,
+	input SRC1REG,
+	input SRC2REG,
+	input SRC1ARF,
+	input SRC2ARF,
+	output reg[3:0] ScrSelReg
+);
+	wire wire0;
+	wire wire1;
+
+	assign wire0 = ((AND | ORR | ADD | SUB | ADC | XOR | NAND | ADDS | SUBS | ANDS | ORRS | XORS) & ((SRC1REG & SRC2ARF) | (SRC1ARF & SRC2REG)) & T3) | ((AND | ORR | ADD | SUB | ADC | XOR | NAND | ADDS | SUBS | ANDS | ORRS | XORS) & SRC1ARF & SRC2ARF & T3) | ((MOVS | LSL | LSR | ASR | CSL | CSR | NOT) & SRC1ARF & T3) | (BX & T3) | ((STRIM | BRA | BNE | BEQ) & T3);
+	assign wire1 = ((AND | ORR | ADD | SUB | ADC | XOR | NAND | ADDS | SUBS | ANDS | ORRS | XORS) & SRC1ARF & SRC2ARF & T4) | ((STRIM | BRA | BNE | BEQ) & T4);
+
+	always @(*) begin
+		if(wire0) ScrSelReg = 4'b0111;
+		else if(wire1) ScrSelReg = 4'b1011;
+		else ScrSelReg = 4'b1111;
+	end
+endmodule
+
+module OutASel(
+    input Clock,
+	input AND,
+	input ORR,
+	input ADD,
+	input SUB,
+	input ADC,
+	input XOR,
+	input NAND,
+	input ADDS,
+	input SUBS,
+	input ANDS,
+	input ORRS,
+	input XORS,
+	input MOVS,
+	input LSL,
+	input LSR,
+	input ASR,
+	input CSL,
+	input CSR,
+	input NOT,
+	input BX,
+	input STRIM,
+	input BRA,
+	input BNE,
+	input BEQ,
+	input INC,
+	input DEC,
+	input STR,
+	input PSH,
+	input T3,
+	input T4,
+	input T5,
+	input T6,
+	input T7,
+	input SRC1REG,
+	input SRC2REG,
+	input SRC1ARF,
+	input SRC2ARF,
+	input DESTREG,
+	input DESTARF,
+	input [1:0]RSel,
+	input [2:0]SREG1,
+	input [2:0]SREG2,
+	output reg[2:0] SelOutA	
+);
+	wire wireSREG1;
+	wire wireSREG2;
+	wire wireRSel;
+	wire wireS1;
+
+	assign wireSREG1 = ((AND | ORR | ADD | SUB | ADC | XOR | NAND | ADDS | SUBS | ANDS | ORRS | XORS) & SRC1REG & SRC2REG & T3) | (MOVS & SRC1REG & T3) | ((INC | DEC) & SRC1REG & T4) | ((LSL | LSR | ASR | CSL | CSR | NOT) & SRC1REG & T3);
+	assign wireSREG2 = ((AND | ORR | ADD | SUB | ADC | XOR | NAND | ADDS | SUBS | ANDS | ORRS | XORS) & DESTREG & ((SRC1REG & SRC2ARF) | (SRC1ARF & SRC2REG)) & T4) | ((AND | ORR | ADD | SUB | ADC | XOR | NAND | ADDS | SUBS | ANDS | ORRS | XORS) & DESTARF & ((SRC1REG & SRC2ARF) | (SRC1ARF & SRC2REG)) & T4);
+	assign wireRSel = ((PSH | STR) & T3) | (BX & T7) | (STRIM & T6);
+	assign wireS1 = ((AND | ORR | ADD | SUB | ADC | XOR | NAND | ADDS | SUBS | ANDS | ORRS | XORS) & SRC1ARF & SRC2ARF & T5) | (MOVS & SRC1ARF & T4) | ((LSL | LSR | ASR | CSL | CSR | NOT) & SRC1ARF & T4) | (BX & T4) | ((STRIM | BRA | BNE | BEQ) & T5); 
+
+	always @(*) begin
+		if(wireSREG1)
+			case(SREG1[2:0])
+				3'b100: SelOutA = 3'b000;
+				3'b101: SelOutA = 3'b001;
+				3'b110: SelOutA = 3'b010;
+				3'b111: SelOutA = 3'b011;
+			endcase
+		if(wireSREG2)
+			case(SREG2[2:0])
+				3'b100: SelOutA = 3'b000;
+				3'b101: SelOutA = 3'b001;
+				3'b110: SelOutA = 3'b010;
+				3'b111: SelOutA = 3'b011;
+			endcase
+		if(wireRSel)
+			case(RSel[1:0])
+				2'b00: SelOutA = 3'b000;
+				2'b01: SelOutA = 3'b001;
+				2'b10: SelOutA = 3'b010;
+				2'b11: SelOutA = 3'b011;
+			endcase
+		if(wireS1) SelOutA = 3'b100;
+	end
+endmodule
+
+module OutBSel(
+    input Clock,
+	input AND,
+	input ORR,
+	input ADD,
+	input SUB,
+	input ADC,
+	input XOR,
+	input NAND,
+	input ADDS,
+	input SUBS,
+	input ANDS,
+	input ORRS,
+	input XORS,
+	input STRIM,
+	input BRA,
+	input BNE,
+	input BEQ,
+	input T3,
+	input T4,
+	input T5,
+	input SRC1REG,
+	input SRC1ARF,
+	input SRC2REG,
+	input SRC2ARF,
+	input [2:0]SREG2,
+	output reg[2:0] SelOutB
+);
+
+	wire wireSREG2;
+	wire wireS1;
+	wire wireS2;
+
+	assign wireSREG2 = ((AND | ORR | ADD | SUB | ADC | XOR | NAND | ADDS | SUBS | ANDS | ORRS | XORS) & SRC1REG & SRC2REG & T3);
+	assign wireS1 = ((AND | ORR | ADD | SUB | ADC | XOR | NAND | ADDS | SUBS | ANDS | ORRS | XORS) & ((SRC1ARF & SRC2REG) | (SRC1REG & SRC2ARF)) & T4);
+	assign wireS2 = ((AND | ORR | ADD | SUB | ADC | XOR | NAND | ADDS | SUBS | ANDS | ORRS | XORS) & SRC1ARF & SRC2ARF & T5) | ((STRIM | BRA | BNE | BEQ) & T5);
+
+	always @(*) begin
+		if(wireSREG2)
+			case(SREG2[2:0])
+				3'b100: SelOutB = 3'b000;
+				3'b101: SelOutB = 3'b001;
+				3'b110: SelOutB = 3'b010;
+				3'b111: SelOutB = 3'b011;
+			endcase
+		if(wireS1) SelOutB = 3'b100;
+		if(wireS2) SelOutB = 3'b101;
+	end
+endmodule
+
+
+module OutCSel(
+    input Clock,
+	input AND,
+	input ORR,
+	input ADD,
+	input SUB,
+	input ADC,
+	input XOR,
+	input NAND,
+	input ADDS,
+	input SUBS,
+	input ANDS,
+	input ORRS,
+	input XORS,
+	input MOVS,
+	input LSL,
+	input LSR,
+	input ASR,
+	input CSL,
+	input CSR,
+	input NOT,
+	input BX,
+	input STRIM,
+	input BRA,
+	input BNE,
+	input BEQ,
+	input INC,
+	input DEC,
+	input T3,
+	input T4,
+	input DESTARF,
+	input SRC1ARF,
+	input SRC1REG,
+	input SRC2REG,
+	input SRC2ARF,
+	input [2:0]SREG1,
+	input [2:0]SREG2,
+	output reg[1:0] SelOutC	
+);
+
+	wire wireSREG1;
+	wire wireSREG2;
+	wire wirePC;
+	wire wireAR;
+
+	assign wireSREG1 = ((AND | ORR | ADD | SUB | ADC | XOR | NAND | ADDS | SUBS | ANDS | ORRS | XORS) & ((SRC1REG & SRC2ARF) & (SRC1ARF & SRC2REG)) & T3) | ((AND | ORR | ADD | SUB | ADC | XOR | NAND | ADDS | SUBS | ANDS | ORRS | XORS) & SRC1ARF & SRC2ARF & T3) | ((MOVS | LSL | LSR | ASR | CSL | CSR | NOT) & SRC1ARF & T3) | ((INC | DEC) & DESTARF & SRC1ARF & T4);
+	assign wireSREG2 = ((AND | ORR | ADD | SUB | ADC | XOR | NAND | ADDS | SUBS | ANDS | ORRS | XORS) & SRC1ARF & SRC2ARF & T4);
+	assign wirePC = (BX & T3) | ((BRA | BNE | BEQ) & T4);
+	assign wireAR = STRIM & T4;
+
+	always @(*) begin
+		if(wireSREG1)
+			case(SREG1[2:0])
+				3'b000: SelOutC = 2'b00;
+				3'b001: SelOutC = 2'b01;
+				3'b010: SelOutC = 2'b11;
+				3'b011: SelOutC = 2'b10;
+			endcase
+		if(wireSREG2)
+			case(SREG2[2:0])
+				3'b000: SelOutC = 2'b00;
+				3'b001: SelOutC = 2'b01;
+				3'b010: SelOutC = 2'b11;
+				3'b011: SelOutC = 2'b10;
+			endcase
+		if(wirePC) SelOutC = 2'b00;
+		if(wireAR) SelOutC = 2'b10;
+	end  
+endmodule
+
+
+module OutDSel(
+    input Clock,
+	input POP,
+	input PSH,
+	input BL,
+	input LDR,
+	input STR,
+	input BX,
+	input STRIM,
+	input T0,
+	input T1,
+	input T3,
+	input T4,
+	input T5,
+	input T6,
+	input T8,
+	output reg[1:0] SelOutD
+);
+
+	wire wireSP;
+	wire wireAR;
+	wire wirePC;
+
+	assign wirePC = T0 | T1;
+	assign wireAR = ((LDR | STR) & T3) | (STRIM & (T6 | T8)) | (STR & T5);
+	assign wireSP = ((POP | BL) & T3) | (BX & (T4 | T6)) | (PSH & (T3 | T5));
+
+	always @(*) begin
+		if(wirePC) SelOutD = 2'b00;
+		if(wireAR) SelOutD = 2'b10;
+		if(wireSP) SelOutD = 2'b11;
+	end
+endmodule
+
+
+module ControlUnit(
+	input Reset,
+	input Clock,
+	output wire WR,
+	output wire CS,
+	input [15:0] IR_input,
+	input [3:0] Flag,
+	output [2:0] OutASel_OUTPUT,
+	output [2:0] OutBSel_OUTPUT,
+	output [1:0] OutCSel_OUTPUT,
+	output [1:0] OutDSel_OUTPUT,
+	output [2:0] FunSel_RF_OUTPUT,
+	output [3:0] RegSel_RF_OUTPUT,
+	output [3:0] ScrSel_RF_OUTPUT,
+	output [2:0] FunSel_ARF_OUTPUT,
+	output [2:0] RegSel_ARF_OUTPUT,
+	output [4:0] FunSel_ALU_OUTPUT,
+	output [1:0] MuxASel_OUTPUT,
+	output [1:0] MuxBSel_OUTPUT,
+	output ALU_WF,
+	output MuxCSel_OUTPUT,
+	output LH,
+	output Write,
+	output reg MOVH_Out
+);
+	//wire [15:0] InstDecInp;
+	wire [2:0] SREG1;
+	wire [2:0] SREG2;
+	wire [2:0] DSTREG;
+	wire [7:0] Address;
+	wire [1:0] RSel;
+	wire [5:0] Opcode;
+	wire T0, T1, T2, T3, T4, T5, T6, T7, T8;
+	wire Z, S;
+	wire BRA, BNE, BEQ, POP, PSH, INC, DEC, LSL, LSR, ASR, CSL, CSR, AND, ORR, NOT, XOR, NAND, MOVH, LDR, STR, MOVL, ADD, ADC, SUB, MOVS, ADDS, SUBS, ANDS, ORRS, XORS, BX, BL, LDRIM, STRIM;
+	wire SRC1REG, SRC2REG, DESTREG, SRC1ARF, SRC2ARF, DESTARF;
+
+	assign Z = Flag[3];
+	
+    always@(*)begin
+            MOVH_Out = MOVH;
+    end
+
+	Time timing(Reset, Clock, T0, T1, T2, T3, T4, T5, T6, T7, T8);
+	Mem memo(Reset, Clock, T0, T1, T3, T4, T5, T6, T8, POP, PSH, LDR, STR, BL, BX, STRIM, WR, CS);
+	InstructionDecoder intruc(Reset, Clock, T2, IR_input, SREG1, SREG2, DSTREG, S, Address, RSel, Opcode);
+	OpcodeDecoder opcodedec(Reset, Clock, T2, Opcode, BRA, BNE, BEQ, POP, PSH, INC, DEC, LSL, LSR, ASR, CSL, CSR, AND, ORR, NOT, XOR, NAND, MOVH, LDR, STR, MOVL, ADD, ADC, SUB, MOVS, ADDS, SUBS, ANDS, ORRS, XORS, BX, BL, LDRIM, STRIM);
+	
+	DecoderReg sreg1(Reset, Clock, T2, SREG1, SRC1REG, SRC1ARF);
+	DecoderReg sreg2(Reset, Clock, T2, SREG2, SRC2REG, SRC2ARF);
+	DecoderReg dst(Reset, Clock, T2, DSTREG, DESTREG, DESTARF);
+
+	OutASel oA_sel(Clock, AND, ORR, ADD, SUB, ADC, XOR, NAND, ADDS, SUBS, ANDS, ORRS, XORS, MOVS, LSL, LSR, ASR, CSL, CSR, NOT, BX, STRIM, BRA, BNE, BEQ, INC, DEC, STR, PSH, T3, T4, T5, T6, T7, SRC1REG, SRC2REG, SRC1ARF, SRC2ARF, DESTREG, DESTARF, RSel, SREG1, SREG2, OutASel_OUTPUT);
+	OutBSel oB_sel(Clock, AND, ORR, ADD, SUB, ADC, XOR, NAND, ADDS, SUBS, ANDS, ORRS, XORS, STRIM, BRA, BNE, BEQ, T3, T4, T5, SRC1REG, SRC1ARF, SRC2REG, SRC2ARF, SREG2, OutBSel_OUTPUT);
+	OutCSel oC_sel(Clock, AND, ORR, ADD, SUB, ADC, XOR, NAND, ADDS, SUBS, ANDS, ORRS, XORS, MOVS, LSL, LSR, ASR, CSL, CSR, NOT, BX, STRIM, BRA, BNE, BEQ, INC, DEC, T3, T4, DESTARF, SRC1ARF, SRC1REG, SRC2REG, SRC2ARF, SREG1, SREG2, OutCSel_OUTPUT);
+	OutDSel oD_sel(Clock, POP, PSH, BL, LDR, STR, BX, STRIM, T0, T1, T3, T4, T5, T6, T8, OutDSel_OUTPUT);
+
+	ArfRegSel arf_regsel(Clock, AND, ORR, ADD, SUB, ADC, XOR, NAND, ADDS, SUBS, ANDS, ORRS, XORS, MOVS, INC, DEC, LSL, LSR, ASR, CSL, CSR, NOT, POP, PSH, BL, BX, STRIM, STR, BRA, BNE, BEQ, MOVH, MOVL, SRC1REG, SRC2REG, SRC1ARF, SRC2ARF, DESTARF, T0, T1, T3, T4, T5, T6, T7, Z, DSTREG, SREG1, RegSel_ARF_OUTPUT);
+	ArfFunSel arf_funsel(Clock, AND, ORR, ADD, SUB, ADC, XOR, NAND, ADDS, SUBS, ANDS, ORRS, XORS, MOVS, INC, DEC, LSL, LSR, ASR, CSL, CSR, NOT, POP, PSH, BL, BX, STR, STRIM, MOVH, MOVL, BRA, BNE, BEQ, T0, T3, T4, T5, T6, T7, SRC1REG, SRC2REG, SRC1ARF, SRC2ARF, DESTREG, DESTARF, FunSel_ARF_OUTPUT);
+	
+	RegRegSel rf_regsel(Clock, AND, ORR, ADD, SUB, ADC, XOR, NAND, ADDS, SUBS, ANDS, ORRS, XORS, MOVS, INC, DEC, LSL, LSR, ASR, CSL, CSR, NOT, POP, LDR, LDRIM, MOVH, MOVL, SRC1REG, SRC2REG, SRC1ARF, SRC2ARF, DESTREG, T3, T4, T5, T6, RSel, DSTREG, SREG1, RegSel_RF_OUTPUT);
+	RegFunSel rf_funsel(Clock, AND, ORR, ADD, SUB, ADC, XOR, NAND, ADDS, SUBS, ANDS, ORRS, XORS, MOVS, INC, DEC, LSL, LSR, ASR, CSL, CSR, NOT, POP, LDR, BX, LDRIM, STRIM, BRA, BNE, BEQ, MOVH, MOVL, T3, T4, T5, T6, SRC1REG, SRC2REG, SRC1ARF, SRC2ARF, DESTREG, DESTARF, FunSel_RF_OUTPUT);
+	RegScrSel rf_scrsel(Clock, AND, ORR, ADD, SUB, ADC, XOR, NAND, ADDS, SUBS, ANDS, ORRS, XORS, MOVS, LSL, LSR, ASR, CSL, CSR, NOT, BX, STRIM, BRA, BNE, BEQ, T3, T4, SRC1REG, SRC2REG, SRC1ARF, SRC2ARF, ScrSel_RF_OUTPUT);
+	
+	AluFunSel alu_funsel(Clock, AND, ORR, ADD, SUB, ADC, XOR, NAND, ADDS, SUBS, ANDS, ORRS, XORS, MOVS, INC, DEC, LSL, LSR, ASR, CSL, CSR, NOT, PSH, STR, BX, STRIM, BRA, BNE, BEQ, T3, T4, T5, T7, SRC1REG, SRC2REG, SRC1ARF, SRC2ARF, FunSel_ALU_OUTPUT);
+
+	MuxASel muxA_sel(Clock, AND, ORR, ADD, SUB, ADC, XOR, NAND, ADDS, SUBS, ANDS, ORRS, XORS, MOVS, INC, DEC, LSL, LSR, ASR, CSL, CSR, NOT, POP, LDR, BX, LDRIM, STRIM, MOVH, MOVL, BRA, BNE, BEQ, T3, T4, T5, SRC1REG, SRC2REG, DESTREG, SRC1ARF, SRC2ARF, DESTARF, MuxASel_OUTPUT);
+	MuxBSel muxB_sel(Clock, AND, ORR, ADD, SUB, ADC, XOR, NAND, ADDS, SUBS, ANDS, ORRS, XORS, MOVS, INC, DEC, LSL, LSR, ASR, CSL, CSR, NOT, BL, BX, STRIM, MOVH, MOVL, BRA, BNE, BEQ, T3, T4, T5, T7, SRC1REG, SRC2REG, DESTREG, SRC1ARF, SRC2ARF, DESTARF, MuxBSel_OUTPUT);
+	MuxCSel muxC_sel(Clock, PSH, STR, BX, STRIM, T3, T4, T5, T6, T8, MuxCSel_OUTPUT);
+
+	Fetch fetch(Reset, Clock, T0, T1, Write, LH);
+	WFSel wf_sel(Reset, Clock, S, ALU_WF);
+
+endmodule
+
+module CPUSystem(
+	input Clock,
+	input Reset,
+	input T
+);
+	wire [15:0] IR_input;
+	wire [3:0] Flag;
+	wire [2:0] OutASel_OUTPUT;
+	wire [2:0] OutBSel_OUTPUT;
+	wire [1:0] OutCSel_OUTPUT;
+	wire [1:0] OutDSel_OUTPUT;
+	wire [2:0] FunSel_RF_OUTPUT;
+	wire [3:0] RegSel_RF_OUTPUT;
+	wire [3:0] ScrSel_RF_OUTPUT;
+	wire [2:0] FunSel_ARF_OUTPUT;
+	wire [2:0] RegSel_ARF_OUTPUT;
+	wire [4:0] FunSel_ALU_OUTPUT;
+	wire [1:0] MuxASel_OUTPUT;
+	wire [1:0] MuxBSel_OUTPUT;
+	wire MuxCSel_OUTPUT;
+	wire LH;
+	wire Write;
+	wire CS;
+	wire WR;
+	wire ALU_WF;
+	wire MOVH;
+	
+	ControlUnit control_unit(Reset, Clock, WR, CS, IR_input, Flag, OutASel_OUTPUT, OutBSel_OUTPUT, OutCSel_OUTPUT, OutDSel_OUTPUT, FunSel_RF_OUTPUT, RegSel_RF_OUTPUT, ScrSel_RF_OUTPUT, FunSel_ARF_OUTPUT, RegSel_ARF_OUTPUT, FunSel_ALU_OUTPUT, MuxASel_OUTPUT, MuxBSel_OUTPUT, ALU_WF, MuxCSel_OUTPUT, LH, Write, MOVH);
+	ALUSystem _ALUSystem(Reset, LH, Write, MuxBSel_OUTPUT, OutCSel_OUTPUT, OutDSel_OUTPUT, FunSel_ARF_OUTPUT, RegSel_ARF_OUTPUT, CS, WR, MuxASel_OUTPUT, MuxCSel_OUTPUT, OutASel_OUTPUT, OutBSel_OUTPUT, FunSel_RF_OUTPUT, RegSel_RF_OUTPUT, ScrSel_RF_OUTPUT, FunSel_ALU_OUTPUT, ALU_WF, Clock, MOVH, IR_input, Flag);
+endmodule
+
+//PROJECT1
+
+
+
